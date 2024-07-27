@@ -1,4 +1,4 @@
-import requests, re
+import requests, re,time
 import os
 from bs4 import BeautifulSoup
 
@@ -13,8 +13,9 @@ def load_token(filename='tds.txt'):
         return file.read().strip()
         
 class TDS:
-    def __init__(self, token) -> None:
+    def __init__(self, token, cookie) -> None:
         self.Token = token
+        self.cookie = cookie
 
     def get_account_info(self):
         url = f"https://traodoisub.com/api/?fields=profile&access_token={self.Token}"
@@ -55,8 +56,13 @@ class TDS:
             response = requests.get(url)
             response.raise_for_status()
             data = response.json()
-            quests = [data[i]['id'] for i in range(len(data))]
-            return quests
+            quests = []
+            if "countdown" in data:
+                return "Countdown"
+            else:
+                for i in data:
+                    quests.append(i)
+                return quests
         except requests.exceptions.RequestException as e:
             return
 
@@ -114,33 +120,30 @@ class FB:
                     return False
                 else:
                     return username
-        except Exception as e:
-            print(f"Error: {e}")
+        except:
             return False
-    def reactpost(self, id_post, type="like"):
+    def reactpost(self, id, type="like"):
         try:
             type = type.upper()
-            response = requests.get(f"https://mbasic.facebook.com/{id_post}/", headers=self.headers, cookies=self.Cookie).text
-
+            response = requests.get(f"https://mbasic.facebook.com/{id}/", headers=self.headers, cookies=self.Cookie).text
+            
             reactionpageurl = "https://mbasic.facebook.com/reactions/picker/?" + response.split("/reactions/picker/?")[1].split('"')[0].replace("amp;", "")
             reactionpage = requests.get(reactionpageurl, headers=self.headers, cookies=self.Cookie).text
             reactionpicker = re.findall(r'/ufi/reaction//?.*?"', reactionpage)
             
             index = 0 if type == "LIKE" else 1 if type == "LOVE" else 2 if type == "CARE" else 3 if type == "HAHA" else 4 if type == "WOW" else 5 if type == "SAD" else 6 if type == "ANGRY" else 7
             url = "https://mbasic.facebook.com" + reactionpicker[index].replace("amp;", "").replace('"', "")
-            print(url)
-            #status = requests.get(url, headers=self.headers, cookies=self.Cookie)
-            #status.raise_for_status()
-            #if status.status_code == 200:
-                #return True
-            #else:
-             #   return False
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return 
+            status = requests.get(url, headers=self.headers, cookies=self.Cookie)
+            status.raise_for_status()
+            if status.status_code == 200:
+                return True
+            else:
+               return False
+        except:
+            return False
     def reactcomment(self,id,type):
         try:
-            postid,cmtid = id.split("_")
+            idpost,cmtid = id.split("_")
             type = type.upper()
             index = 0 if type == "LIKE" else 1 if type == "LOVE" else 2 if type == "CARE" else 3 if type == "HAHA" else 4 if type == "WOW" else 5 if type == "SAD" else 6 if type == "ANGRY" else 7
             response = requests.get(f"https://mbasic.facebook.com/{id}",headers=self.headers,cookies=self.Cookie).text
@@ -153,11 +156,9 @@ class FB:
             if status.status_code == 200:
                 return True
             else:
-                return False
-            
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return 
+                return False    
+        except:
+            return False
     def commentpost(self,id_post, commenttxt):
         try:
             response = requests.get(f"https://mbasic.facebook.com/{id_post}/", headers=self.headers, cookies=self.Cookie).text
@@ -165,7 +166,6 @@ class FB:
             form = soup.find('form', action=lambda x: x and 'comment' in x)
             
             if form is None:
-                print("Comment form not found.")
                 return False
             commenturl = "https://mbasic.facebook.com" + form['action']
             
@@ -176,10 +176,9 @@ class FB:
                 return True
             else:
                 return False
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        except:
             return False
-    def follow(self,id):
+    def follow(self,id):#User,Page
         try:
             response = requests.get(f"https://mbasic.facebook.com/{id}",headers=self.headers,cookies=self.Cookie).text
             followurl = "https://mbasic.facebook.com/a/subscribe.php?id="+response.split("/a/subscribe.php?id=")[1].split('"')[0].replace("amp;","")
@@ -189,18 +188,49 @@ class FB:
                 return True
             else:
                 return False
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return False
-    def share(self, id, message):
-        try:
-            response = requests.get(f"https://mbasic.facebook.com/{id}", headers=self.headers,cookies= self.Cookie).text
-            sharepage = "https://mbasic.facebook.com/composer/mbasic/?c_src=share"+response.split("/composer/mbasic/?c_src=share")[1].split('"')[0].replace("amp;","")
-            print(sharepage)
-            
         except:
             return False
-
+    def joingroup(self,id):
+        try:
+            response = requests.get(f"https://mbasic.facebook.com/{id}",headers=self.headers,cookies=self.Cookie).text
+            grurl = "https://mbasic.facebook.com/a/group/join/?group_id"+response.split("/a/group/join/?group_id")[1].split('"')[0].replace("amp;","")
+            status = requests.get(grurl,headers=self.headers,cookies=self.Cookie)
+            status.raise_for_status()
+            if status.status_code == 200:
+                return True
+            else:
+                return False
+        except:
+            return False
+    def share(self, id_post, message):
+        try:
+            response = requests.get(f"https://mbasic.facebook.com/{id_post}", headers=self.headers, cookies=self.Cookie).text
+            
+            parts = response.split('/composer/mbasic/?c_src=share')
+            if len(parts) < 2:
+                return False
+            
+            sharepageurl_part = parts[1].split('"')[0].replace("amp;", "")
+            sharepageurl = f"https://mbasic.facebook.com/composer/mbasic/?c_src=share{sharepageurl_part}"
+            
+            sharepage = requests.get(sharepageurl, headers=self.headers, cookies=self.Cookie).text
+            soup = BeautifulSoup(sharepage, 'html.parser')
+            form = soup.find('form', action=lambda x: x and 'composer/mbasic/' in x)
+            
+            if form is None:
+                return False
+            share_url = "https://mbasic.facebook.com" + form['action']
+            data = {input['name']: input.get('value', '') for input in form.find_all('input') if input.get('name')}
+            data['xc_message'] = message
+            post_response = requests.post(share_url, headers=self.headers, cookies=self.Cookie, data=data)
+            
+            if post_response.status_code == 200:
+                return True
+            else:
+                return False
+        
+        except:
+            return False
         
 def main():
     token_tds = load_token()
@@ -213,7 +243,7 @@ def main():
             token_tds = input("Nhập Token TDS: ")
             save_token(token_tds)
 
-    tds = TDS(token_tds)
+    tds = TDS(token_tds,None)
     account = tds.get_account_info()
     return account
 def filltoken(i=1):
@@ -229,10 +259,133 @@ def filltoken(i=1):
             break
     return tokenfb
 
+def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, comment, share, reactcmt, group, page,tg):
+    tds = TDS(token,cookie)
+    fb = FB(cookie)
+    timedelay = 15
+    while True:
+        
+        if follow == True:#ID
+            quest = tds.get_quest("follow")
+            if "id" in quest[0]:
+                print("Follow:",quest)
+                for i in range(len(quest)):
+                    state = fb.follow(quest[i]["id"])
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin("follow",quest[i]["id"]))
+            else:
+                time.sleep(30)
+        if like == True:#ID
+            quest = tds.get_quest("like")
+            if "id" in quest[0]:
+                print("Like:",quest)
+                for i in range(len(quest)):
+                    state = fb.reactpost(quest[i]["id"],"like")
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin("like",quest[i]["id"]))
+            else:
+                time.sleep(30)
+        if likegiare == True:#ID
+            quest = tds.get_quest("likegiare")
+            if "id" in quest[0]:
+                print("Like Gia Re:",quest)
+                for i in range(len(quest)):
+                    state = fb.reactpost(quest[i]["id"],"like")
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin("likegiare",quest[i]["id"]))
+            else:
+                time.sleep(30)
+        if likesieure == True:#ID
+            quest = tds.get_quest("likesieure")
+            if "id" in quest[0]:
+                print("Like Sieu Re:",quest)
+                for i in range(len(quest)):
+                    state = fb.reactpost(quest[i]["id"],"like")
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin("likesieure",quest[i]["id"]))
+            else:
+                time.sleep(30)
+        if reaction == True:#ID,Type
+            quest = tds.get_quest("reaction")
+            if "id" in quest[0]:
+                print("Cam Xuc:",quest)
+                for i in range(len(quest)):
+                    state = fb.reactpost(quest[i]["id"],quest[i]["type"])
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin(quest[i]["type"],quest[i]["id"]))
+            else:
+                time.sleep(30)
+        if comment == True:#ID,msg
+            quest = tds.get_quest("comment")
+            if "id" in quest[0]:
+                print("Comment:",quest)
+                for i in range(len(quest)):
+                    state = fb.commentpost(quest[i]["id"],quest[i]["msg"])
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin("comment",quest[i]["id"]))
+            else:
+                time.sleep(30)
+        if share == True:#ID
+            quest = tds.get_quest("share")
+            if "id" in quest[0]:
+                print("Share:",quest)
+                for i in range(len(quest)):
+                    state = fb.share(quest[i]["id"],"")
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin("share",quest[i]["id"]))
+            else:
+                time.sleep(30)
+        if reactcmt == True:#ID,type
+            quest = tds.get_quest("reactcmt")
+            if "id" in quest[0]:
+                print("Cam Xuc Comment:",quest)
+                for i in range(len(quest)):
+                    state = fb.reactcomment(quest[i]["id"],quest[i]["type"])
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin("reactcmt",quest[i]["id"]))
+            else:
+                time.sleep(30)
+        if group == True:#ID
+            quest = tds.get_quest("group")
+            if "id" in quest[0]:
+                print("Group:",quest)
+                for i in range(len(quest)):
+                    state = fb.joingroup(quest[i]["id"])
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin("group",quest[i]["id"]))
+            else:
+                time.sleep(30)
+        if page == True:#ID
+            quest = tds.get_quest("page")
+            if "id" in quest[0]:
+                print("Page:",quest)
+                for i in range(len(quest)):
+                    state = fb.follow(quest[i]["id"])
+                    if state == True:
+                        time.sleep(timedelay)
+                        print(tds.getcoin("follow",quest[i]["id"]))
+            else:
+                time.sleep(30)
+        tg-=1
+        if tg == 0:
+            break
+    
+        
+
 if __name__ == "__main__":
-    #account = main()
-    #tds = TDS(account["token"])
-    #quest = tds.get_quest("like")
-    #print(quest)
-    ck = FB("sb=DLGeZkksd8rSOfprbOZRysMN;c_user=100094335661588;datr=z92hZivEL2EMf6QxumHYsy-7;m_page_voice=100094335661588;ps_l=1;ps_n=1;m_pixel_ratio=1;wd=1920x953;fr=1GLY6oZVV0MugnE4t.AWVk-tsISz-erjSS4GnLG5MESe0.BmpInk..AAA.0.0.BmpInk.AWV8Tbd44lA;xs=15%3AsFUGVUeyi-oR5g%3A2%3A1721843873%3A-1%3A6277%3A%3AAcWKOF-MYFrX2Dm_SBzugCXp8oJokSnZQrgnc7Iw5w;presence=C%7B%22t3%22%3A%5B%5D%2C%22utc3%22%3A1722059743212%2C%22v%22%3A1%7D;m_ls=%7B%22100094335661588%22%3A%7B%22c%22%3A%7B%221%22%3A%22HCwAABbsCBbo6_yvBRMFFqjYkfWgwi0A%22%2C%2295%22%3A%22HCwAABZ8FtzL7MULEwUWqNiR9aDCLQA%22%7D%2C%22d%22%3A%22983d3f54-ea63-494e-af0d-684dea5c669c%22%2C%22s%22%3A%220%22%2C%22u%22%3A%22jhe19a%22%7D%2C%2261563503390738%22%3A%7B%22c%22%3A%7B%221%22%3A%22HCwRAAAWKhbY_bnZAhMFFqTAgey7_xsA%22%2C%2295%22%3A%22HCwRAAAWDBbiz9_IChMFFqTAgey7_xsA%22%7D%2C%22d%22%3A%2278d6d33e-b40e-472b-8260-3ead89470196%22%2C%22s%22%3A%220%22%2C%22u%22%3A%22my5qid%22%7D%7D;")
-    ck.reactpost("461041163519394","love")
+    account = main()
+    cookie = input("Nhập Cookie Facebook: ")
+    tds = TDS(account["token"],cookie)
+    fb = FB(cookie)
+    doquest(account["token"],cookie,True,True,True,True,True,True,True,True,True,True,10)
+    
+    
