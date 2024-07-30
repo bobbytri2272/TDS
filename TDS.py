@@ -381,7 +381,9 @@ def filltoken(i=1):
 i= 1
 def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, comment, share, reactcmt, group, page,tg):
     settingdelay()
+    os.system("cls")
     logo()
+    print("--------------------------------------------------------------------")
     tds = TDS(token,cookie)
     fb = FB(cookie)
     tds.setnickfb(fb.UID)
@@ -399,7 +401,7 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
     def printstatus(xu,id,msg="",type="None"):
         global i
         dt = gettime()
-        typewriter(f"{Fore.RED}[{i}]{Style.RESET_ALL} | {dt}: {Fore.CYAN}{type}{Style.RESET_ALL} | {Fore.BLUE}{id}{Style.RESET_ALL} | {Fore.GREEN}{xu}{Style.RESET_ALL} | {Fore.MAGENTA}{msg}{Style.RESET_ALL}")
+        print(f"{Fore.RED}[{i}]{Style.RESET_ALL} | {dt}: {Fore.CYAN}{type}{Style.RESET_ALL} | {Fore.BLUE}{id}{Style.RESET_ALL} | {Fore.GREEN}{xu}{Style.RESET_ALL} | {Fore.MAGENTA}{msg}{Style.RESET_ALL}")
         i+=1
     def cd(seconds):
         while seconds >= 0:
@@ -418,13 +420,15 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.follow(quest[i]["id"])
-                        cd(followd)
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin("follow",quest[i]["id"])
                             if result.get("success"):
                                 data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"],"FOLLOW")
-                cd(questd)
+                                cd(followd)
+                        else:
+                            cd(followd)
             else:
                 cd(questd)
         if like == True:#ID
@@ -433,13 +437,15 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.reactpost(quest[i]["id"],"like")
-                        cd(liked)
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin("like",quest[i]["id"])
                             if result.get("success"):
                                 data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"],"LIKE")
-                cd(questd)
+                                cd(liked)
+                        else:
+                            cd(liked)
             else:
                 cd(questd)
         if likegiare == True:#ID
@@ -448,13 +454,15 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.reactpost(quest[i]["id"],"like")
-                        cd(liked)
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin("like",quest[i]["id"])
                             if result.get("success"):
                                 data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"],"LIKEGIARE")
-                cd(questd)
+                                cd(liked)
+                        else:
+                            cd(liked)
             else:
                 cd(questd)
         if likesieure == True:#ID
@@ -463,13 +471,15 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.reactpost(quest[i]["id"],"like")
-                        cd(liked)
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin("like",quest[i]["id"])
                             if result.get("success"):
                                 data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"],"LIKESIEURE")
-                cd(questd)
+                                cd(liked)
+                        else:
+                            cd(liked)
             else:
                 cd(questd)
         if reaction == True:#ID,Type
@@ -478,12 +488,15 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.reactpost(quest[i]["id"],quest[i]["type"])
-                        cd(reactiond)
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin(quest[i]["type"],quest[i]["id"])
                             if result.get("success"):
+                                data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"],quest[i]["type"])
-                cd(questd)
+                                cd(reactiond)
+                        else:
+                            cd(reactiond)
             else:
                 cd(questd)
         if comment == True:#ID,msg
@@ -492,12 +505,16 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.commentpost(quest[i]["id"],quest[i]["msg"])
-                        cd(commentd)
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin("comment",quest[i]["id"])
                             if result.get("success"):
+                                data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"]+" | "+quest[i]["msg"],"COMMENT")
-                cd(questd)
+                                cd(commentd)
+                        else:
+                            cd(commentd)
+                            
             else:
                 cd(questd)
         if share == True:#ID
@@ -506,12 +523,15 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.share(quest[i]["id"],"")
-                        cd(shared)
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin("share",quest[i]["id"])
                             if result.get("success"):
+                                data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"],"SHARE")
-                    cd(questd)
+                                cd(shared)
+                        else:
+                            cd(shared)
             else:
                 cd(questd)
         if reactcmt == True:#ID,type
@@ -520,12 +540,16 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.reactcomment(quest[i]["id"],quest[i]["type"])
-                        cd(reactcmtd)
+                    
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin(quest[i]["type"]+"CMT",quest[i]["id"])
                             if result.get("success"):
+                                data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"],quest[i]["type"]+"CMT")
-                cd(questd)
+                                cd(reaction)
+                        else:
+                            cd(reactcmt)
             else:
                 cd(questd)
         if group == True:#ID
@@ -534,12 +558,15 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.joingroup(quest[i]["id"])
-                        cd(groupd)
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin("group",quest[i]["id"])
                             if result.get("success"):
+                                data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"],"GROUP")
-                cd(questd)
+                                cd(groupd)
+                        else:
+                            cd(groupd)
             else:
                 cd(questd)
         if page == True:#ID
@@ -548,12 +575,15 @@ def doquest(token, cookie, follow, like, likegiare, likesieure, reaction, commen
                 if "id" in quest[0]:
                     for i in range(len(quest)):
                         state = fb.follow(quest[i]["id"])
-                        cd(paged)
                         if state == True:
+                            time.sleep(5)
                             result = tds.getcoin("page",quest[i]["id"])
                             if result.get("success"):
+                                data = result.get("data")
                                 printstatus(data["xu"],data["id"],data["msg"],"PAGE")
-                cd(questd)
+                                cd(paged)
+                        else:
+                            cd(paged)
             else:
                 cd(questd)
         tg-=1
@@ -683,5 +713,7 @@ def choosequest(TOKEN, COOKIE):
 
 if __name__ == "__main__":
     account = main()
-    cookie = input("Nhập Cookie Facebook: ")
+    cookie = input("Nhập Cookie Facebook:")
     choosequest(account["token"],cookie)
+    fb = FB(cookie)
+    tds = TDS(account["token"],cookie)
